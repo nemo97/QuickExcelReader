@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Excel Definition Schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string"
+    },
+    "sheets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sheetName": { "type": "string" },
+          "sheetIndex": { "type": "integer" },
+          "description": { "type": "string" },
+          "fields": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/field" }
+          }
+        },
+        "required": ["sheetName", "fields"]
+      }
+    }
+  },
+  "required": ["schemaVersion", "sheets"],
+  "definitions": {
+    "field": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "xlsColumn": { "type": "string" },
+        "type": { "type": "string", "enum": ["string", "integer", "boolean", "table"] },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "maxLength": { "type": "integer" },
+            "regex": { "type": "string" },
+            "range": {
+              "type": "object",
+              "properties": {
+                "min": { "type": "number" },
+                "max": { "type": "number" }
+              },
+              "required": ["min", "max"]
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": { "type": "string" },
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/field" }
+        }
+      },
+      "required": ["name", "type"]
+    }
+  }
+}
