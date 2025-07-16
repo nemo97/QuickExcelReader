@@ -27,5 +27,5 @@ by building from source code.
    ```
 #### Usage
 
-You can use the `QuickExcelReaderTest` test class to as a reference. Here's a simple example.
+You can use the `QuickExcelReaderTest` test class as a reference. Here's a simple example.
 
