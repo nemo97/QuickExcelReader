@@ -7,7 +7,7 @@
       "fields": [
         {
           "name": "field1",
-          "xlsColumn": "A1",
+          "xlsColumn": "A3",
           "type": "string",
           "validation": {
             "required": true,
@@ -39,9 +39,10 @@
         {
           "name": "field4",
           "type": "table",
+          "xlsColumn": "A5-C7",
           "fields": [
             {
-              "name": "field3",
+              "name": "field4a",
               "type": "boolean",
               "validation": {
                 "required": true
@@ -49,7 +50,7 @@
               "description": "This is a boolean field."
             },
             {
-              "name": "field4",
+              "name": "field4b",
               "type": "string",
               "validation": {
                 "required": true,

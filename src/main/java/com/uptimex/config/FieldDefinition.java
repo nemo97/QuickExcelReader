@@ -6,6 +6,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class FieldDefinition {
+    public static enum DataType {
+        STRING("string"), NUMBER("number"), DATE("date"), BOOLEAN("boolean"), TABLE("table");
+        private final String value;
+        DataType(String value) {
+            this.value = value;
+        }
+        public String getValue() {
+            return value;
+        }
+    }
+
     @JsonProperty("name")
     private String name;
 

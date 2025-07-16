@@ -1,13 +1,10 @@
 package com.uptimex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.ValidationMessage;
 import com.uptimex.config.ExcelDefinition;
 import com.uptimex.config.FieldDefinition;
 import com.uptimex.utils.ExcelCellData;
 import com.uptimex.utils.ExcelCellHolder;
-import com.uptimex.utils.ExcelDataInner;
-import com.uptimex.utils.JsonSchemaValidator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -17,8 +14,11 @@ import org.slf4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import static java.lang.Character.getType;
 
 public class QuickExcelReader {
     private static Logger LOG = org.slf4j.LoggerFactory.getLogger(QuickExcelReader.class);
@@ -33,10 +33,10 @@ public class QuickExcelReader {
 //        this.sheetName = builder.sheetName;
     }
 
-    public Map<String,Map<String, ExcelDataInner>> read() throws IOException {
+    public Map<String,Map<String, ExcelCellData>> read() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        Map<String,Map<String, ExcelDataInner>> excelDataMap = new java.util.HashMap<>();
+        Map<String,Map<String, ExcelCellData>> excelDataMap = new java.util.HashMap<>();
 
 //        LOG.debug("Validating JSON config against schema...");
 //        JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
@@ -62,6 +62,7 @@ public class QuickExcelReader {
 
         // Here you can process the excelDefinition object as needed
         try (FileInputStream fis = excelInputStream) {
+
             Workbook workbook = new XSSFWorkbook(fis);
 
             for (com.uptimex.config.SheetDefinition sheetDefinition : excelDefinition.getSheets()) {
@@ -89,26 +90,8 @@ public class QuickExcelReader {
 
                 ExcelCellHolder holder = new ExcelCellHolder(0,0);
                 // Read data from the sheet
-                Map<String, ExcelDataInner> sheetDataMap = new java.util.HashMap<>();
-                for(FieldDefinition fieldDefinition: sheetDefinition.getFields()) {
-
-                    LOG.info("Processing field: {}", fieldDefinition.getName());
-                    if(fieldDefinition.getXlsColumn() == null || fieldDefinition.getXlsColumn().isEmpty()) {
-                        LOG.warn("Field name is null or empty in sheet: {}, calculating field {} to next cell in same ROW {} ", sheetDefinition.getSheetName(), fieldDefinition.getName(), holder.getRowIndex());
-                        holder.nextCell();
-                    }else{
-                        LOG.info("Moved to Field {} is at column: {}", fieldDefinition.getName(), fieldDefinition.getXlsColumn());
-                        holder.resetToNewPosition(fieldDefinition.getXlsColumn());
-                    }
-                    ExcelDataInner excelDataInner = new ExcelDataInner();
-                    ExcelCellData excelData = new ExcelCellData();
-                    excelData.setFieldDefinition(fieldDefinition);
-                    Object cellValue = readDataFromSheet(sheet, fieldDefinition, holder);
-                    excelData.setValue(cellValue);
-                    excelDataInner.put(fieldDefinition.getName(), fieldDefinition, excelData);
-
-                    sheetDataMap.put(fieldDefinition.getName(), excelDataInner);
-                }
+                Map<String, ExcelCellData> sheetDataMap = new java.util.HashMap<>();
+                sheetDataMap = readFields(sheetDefinition.getFields(), holder, sheet);
                 if(LOG.isDebugEnabled()) {
                     LOG.debug("Data read from sheet {}: {}", sheet.getSheetName(), sheetDataMap);
                 }
@@ -120,7 +103,37 @@ public class QuickExcelReader {
         return excelDataMap;
     }
 
-    private Object readDataFromSheet(Sheet sheet, FieldDefinition fieldDefinition,ExcelCellHolder holder) {
+    private Map<String, ExcelCellData> readFields(List<FieldDefinition> fieldDefinitions, ExcelCellHolder holder, Sheet sheet) {
+
+        Map<String, ExcelCellData> sheetDataMap = new HashMap<>();
+
+        for(FieldDefinition fieldDefinition: fieldDefinitions) {
+
+            if(FieldDefinition.DataType.TABLE.getValue().equalsIgnoreCase(fieldDefinition.getType())){
+                // complex type table ignore here
+                continue;
+            }
+
+            LOG.info("Processing field: {}", fieldDefinition.getName());
+            if(fieldDefinition.getXlsColumn() == null || fieldDefinition.getXlsColumn().isEmpty()) {
+                LOG.warn("Field name is null or empty in sheet: {}, calculating field {} to next cell in same ROW {} ", sheet.getSheetName(), fieldDefinition.getName(), holder.getRowIndex());
+                holder.nextCell();
+            }else{
+                LOG.info("Moved to Field {} is at column: {}", fieldDefinition.getName(), fieldDefinition.getXlsColumn());
+                holder.resetToNewPosition(fieldDefinition.getXlsColumn());
+            }
+
+            ExcelCellData excelData = new ExcelCellData();
+            excelData.setFieldDefinition(fieldDefinition);
+            Object cellValue = readDataFromCell(sheet, fieldDefinition, holder);
+            excelData.setValue(cellValue);
+            sheetDataMap.put(fieldDefinition.getName(), excelData);
+        }
+
+        return sheetDataMap;
+    }
+
+    private Object readDataFromCell(Sheet sheet, FieldDefinition fieldDefinition, ExcelCellHolder holder) {
         Row row = sheet.getRow(holder.getRowIndex());
         if (row == null) return null;
         Cell cell = row.getCell(holder.getColumnIndex());
