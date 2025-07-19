@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,8 @@ import static java.lang.Character.getType;
 
 public class QuickExcelReader {
     private static Logger LOG = org.slf4j.LoggerFactory.getLogger(QuickExcelReader.class);
+    private final boolean validateData;
+    private final boolean validateSchema;
 
     private FileInputStream excelInputStream;
     private FileInputStream configInputStream;
@@ -30,13 +33,15 @@ public class QuickExcelReader {
     private QuickExcelReader(Builder builder) {
         this.excelInputStream = builder.excelInputStream;
         this.configInputStream = builder.configInputStream;
+        this.validateSchema = builder.validateSchema;
+        this.validateData = builder.validateData;
 //        this.sheetName = builder.sheetName;
     }
 
-    public Map<String,Map<String, ExcelCellData>> read() throws IOException {
+    public Map<String, Map<String, ExcelCellData>> read() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        Map<String,Map<String, ExcelCellData>> excelDataMap = new java.util.HashMap<>();
+        Map<String, Map<String, ExcelCellData>> excelDataMap = new java.util.HashMap<>();
 
 //        LOG.debug("Validating JSON config against schema...");
 //        JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
@@ -70,12 +75,12 @@ public class QuickExcelReader {
                 LOG.info("Processing sheet: {}", sheetDefinition.getSheetName());
                 // You can access fields and other properties of the sheetDefinition here
                 // For example, you can print field names:
-                if(LOG.isDebugEnabled()){
+                if (LOG.isDebugEnabled()) {
                     LOG.debug("Sheet definition: {}", sheetDefinition);
                 }
 //                sheetDefinition.getFields().forEach(field -> LOG.debug("Field: {}", field.getName()));
                 Sheet sheet = null;
-                if(sheetDefinition.getSheetName() != null && !sheetDefinition.getSheetName().isEmpty()) {
+                if (sheetDefinition.getSheetName() != null && !sheetDefinition.getSheetName().isEmpty()) {
                     sheet = workbook.getSheet(sheetDefinition.getSheetName());
                 } else if (sheetDefinition.getSheetIndex() >= 0) {
                     sheet = workbook.getSheetAt(sheetDefinition.getSheetIndex());
@@ -88,11 +93,11 @@ public class QuickExcelReader {
 
                 LOG.info("Reading data from sheet: {}", sheet.getSheetName());
 
-                ExcelCellHolder holder = new ExcelCellHolder(0,0);
+                ExcelCellHolder holder = new ExcelCellHolder(0, 0);
                 // Read data from the sheet
                 Map<String, ExcelCellData> sheetDataMap = new java.util.HashMap<>();
                 sheetDataMap = readFields(sheetDefinition.getFields(), holder, sheet);
-                if(LOG.isDebugEnabled()) {
+                if (LOG.isDebugEnabled()) {
                     LOG.debug("Data read from sheet {}: {}", sheet.getSheetName(), sheetDataMap);
                 }
                 excelDataMap.put(sheet.getSheetName(), sheetDataMap);
@@ -107,18 +112,18 @@ public class QuickExcelReader {
 
         Map<String, ExcelCellData> sheetDataMap = new HashMap<>();
 
-        for(FieldDefinition fieldDefinition: fieldDefinitions) {
+        for (FieldDefinition fieldDefinition : fieldDefinitions) {
 
-            if(FieldDefinition.DataType.TABLE.getValue().equalsIgnoreCase(fieldDefinition.getType())){
+            if (FieldDefinition.DataType.TABLE.getValue().equalsIgnoreCase(fieldDefinition.getType())) {
                 // complex type table ignore here
                 continue;
             }
 
             LOG.info("Processing field: {}", fieldDefinition.getName());
-            if(fieldDefinition.getXlsColumn() == null || fieldDefinition.getXlsColumn().isEmpty()) {
+            if (fieldDefinition.getXlsColumn() == null || fieldDefinition.getXlsColumn().isEmpty()) {
                 LOG.warn("Field name is null or empty in sheet: {}, calculating field {} to next cell in same ROW {} ", sheet.getSheetName(), fieldDefinition.getName(), holder.getRowIndex());
                 holder.nextCell();
-            }else{
+            } else {
                 LOG.info("Moved to Field {} is at column: {}", fieldDefinition.getName(), fieldDefinition.getXlsColumn());
                 holder.resetToNewPosition(fieldDefinition.getXlsColumn());
             }
@@ -141,14 +146,30 @@ public class QuickExcelReader {
 
         switch (cell.getCellType()) {
             case STRING:
-                return cell.getStringCellValue();
+                String cellValue = cell.getStringCellValue();
+                if(fieldDefinition.getDataType() == FieldDefinition.DataType.STRING) {
+                    return cellValue;
+                }
+                break;
             case NUMERIC:
                 if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getDateCellValue();
+                    Date cellDtValue = cell.getDateCellValue();
+                    if (fieldDefinition.getDataType() == FieldDefinition.DataType.LOCAL_DATE_TIME) {
+                        return cellDtValue.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+                    } else if (fieldDefinition.getDataType() == FieldDefinition.DataType.LOCAL_DATE) {
+                        return cellDtValue.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+                    }
                 }
-                return cell.getNumericCellValue();
+                double doubleCellVal = cell.getNumericCellValue();
+                if (fieldDefinition.getDataType() == FieldDefinition.DataType.DOUBLE) {
+                    return new Double(doubleCellVal);
+                } else if (fieldDefinition.getDataType() == FieldDefinition.DataType.LONG) {
+                    return new Double(doubleCellVal).longValue(); // Convert to long if needed
+                }
+                break;
             case BOOLEAN:
                 return cell.getBooleanCellValue();
+
             case FORMULA:
                 return cell.getCellFormula();
             case BLANK:
@@ -156,7 +177,10 @@ public class QuickExcelReader {
             default:
                 return cell.toString();
         }
+
+        return null; // Default case if no type matches
     }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -165,6 +189,8 @@ public class QuickExcelReader {
 
         private FileInputStream excelInputStream;
         private FileInputStream configInputStream;
+        private boolean validateSchema = true;
+        private boolean validateData;
 
         public Builder excelPath(String excelPath) {
 //            this.excelPath = excelPath;
@@ -185,19 +211,27 @@ public class QuickExcelReader {
             }
             return this;
         }
+
         public Builder excelInputStream(FileInputStream excelInputStream) {
             this.excelInputStream = excelInputStream;
             return this;
         }
+
         public Builder configInputStream(FileInputStream configInputStream) {
             this.configInputStream = configInputStream;
             return this;
         }
 
-//        public Builder sheetName(String sheetName) {
-//            this.sheetName = sheetName;
-//            return this;
-//        }
+        public Builder validateSchema(boolean validateSchema) {
+            this.validateSchema = validateSchema;
+            return this;
+        }
+
+        public Builder validateData(boolean validateData) {
+            this.validateData = validateData;
+            return this;
+        }
+
 
         public QuickExcelReader build() {
             if (excelInputStream == null) {

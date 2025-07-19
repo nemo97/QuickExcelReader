@@ -2,12 +2,13 @@ package com.uptimex.config;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class FieldDefinition {
     public static enum DataType {
-        STRING("string"), NUMBER("number"), DATE("date"), BOOLEAN("boolean"), TABLE("table");
+        STRING("string"), DOUBLE("double"), LONG("long"), LOCAL_DATE_TIME("localDateTime"),LOCAL_DATE("localdate"), BOOLEAN("boolean"), TABLE("table");
         private final String value;
         DataType(String value) {
             this.value = value;
@@ -34,6 +35,9 @@ public class FieldDefinition {
 
     @JsonProperty("fields")
     private List<FieldDefinition> fields; // for "table" type
+
+    @JsonIgnore
+    private DataType dataType;
 
     // getters and setters
 
@@ -85,6 +89,19 @@ public class FieldDefinition {
         this.fields = fields;
     }
 
+    public DataType getDataType() {
+        if(this.dataType == null) {
+            this.dataType = DataType.valueOf(type.toUpperCase());
+        }
+        if(this.dataType == null) {
+            throw new IllegalStateException("Invalid data type " + this.type + " for field " + this.name);
+        }
+        return dataType;
+    }
+    public void setDataType(DataType dataType) {
+
+        this.dataType = dataType;
+    }
     @Override
     public String toString() {
         return "FieldDefinition{" +

@@ -18,7 +18,7 @@
         },
         {
           "name": "field2",
-          "type": "integer",
+          "type": "long",
           "validation": {
             "required": true,
             "range": {
@@ -39,7 +39,7 @@
         {
           "name": "field4",
           "type": "table",
-          "xlsColumn": "A5-C7",
+          "xlsColumn": "B8-B9",
           "fields": [
             {
               "name": "field4a",

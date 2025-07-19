@@ -36,8 +36,29 @@ class QuickExcelReaderTest {
 
         for (Map.Entry<String, Map<String, ExcelCellData>> sheetEntry : result.entrySet()) {
             System.out.println("Sheet: " + sheetEntry.getKey());
+
             for (Map.Entry<String, ExcelCellData> fieldEntry : sheetEntry.getValue().entrySet()) {
-                System.out.println("  Field: " + fieldEntry.getKey() + " -> " + fieldEntry.getValue().getValue());
+                //System.out.println("  Field: " + fieldEntry.getKey() + " -> " + fieldEntry.getValue().getValue());
+                ExcelCellData cellData = fieldEntry.getValue();
+                switch (cellData.getCellType()){
+                    case TABLE:
+                        System.out.println("  String: Field: " + fieldEntry.getKey() + " -> " + cellData.getTableValue());
+                        break;
+                    case STRING:
+                        System.out.println("  String: Field: " + fieldEntry.getKey() + " -> " + cellData.getStringValue());
+                        break;
+                    case LONG:
+                        System.out.println("  Long: Field: " + fieldEntry.getKey() + " -> " + cellData.getLongValue());
+                        break;
+                    case BOOLEAN:
+                        System.out.println("  Boolean : Field: " + fieldEntry.getKey() + " -> " + cellData.getValue());
+                        break;
+                    case LOCAL_DATE_TIME:
+                        System.out.println("  LocalDateTime : Field: " + fieldEntry.getKey() + " -> " + cellData.getValue());
+                        break;
+                    default:
+                        System.out.println("  Field: " + fieldEntry.getKey() + " -> Unknown type");
+                }
             }
         }
 
