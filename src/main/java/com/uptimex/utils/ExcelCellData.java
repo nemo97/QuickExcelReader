@@ -17,7 +17,7 @@ public class ExcelCellData {
             case TABLE:
                 return (Map<String, ?>) value; // Assuming value is a Map for TABLE type
             default:
-                throw new UnsupportedOperationException("Table type cells cannot be converted to string directly.");
+                throw new UnsupportedOperationException("This cell is not of type TABLE, cannot be converted to Map directly.");
 
         }
     }
