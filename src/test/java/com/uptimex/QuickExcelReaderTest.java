@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -42,7 +43,31 @@ class QuickExcelReaderTest {
                 ExcelCellData cellData = fieldEntry.getValue();
                 switch (cellData.getCellType()){
                     case TABLE:
-                        System.out.println("  String: Field: " + fieldEntry.getKey() + " -> " + cellData.getTableValue());
+                        System.out.println("  table: Field: " + fieldEntry.getKey());
+                        List<Map<String,ExcelCellData>> tableData = cellData.getTableValue();
+                        for (Map<String, ExcelCellData> row : tableData) {
+                            System.out.println("    Row: ");
+                            for (Map.Entry<String, ExcelCellData> rowEntry : row.entrySet()) {
+                                //System.out.println("      " + rowEntry.getKey() + " -> " + rowEntry.getValue().getStringValue());
+                                ExcelCellData cellData2 = rowEntry.getValue();
+                                switch (cellData2.getCellType()) {
+                                    case STRING:
+                                        System.out.println("  String: Field: " + rowEntry.getKey() + " -> " + cellData2.getStringValue());
+                                        break;
+                                    case LONG:
+                                        System.out.println("  Long: Field: " + rowEntry.getKey() + " -> " + cellData2.getLongValue());
+                                        break;
+                                    case BOOLEAN:
+                                        System.out.println("  Boolean : Field: " + rowEntry.getKey() + " -> " + cellData2.getValue());
+                                        break;
+                                    case LOCAL_DATE_TIME:
+                                        System.out.println("  LocalDateTime : Field: " + rowEntry.getKey() + " -> " + cellData2.getValue());
+                                        break;
+                                    default:
+                                        System.out.println("  Field: " + rowEntry.getKey() + " -> Unknown type");
+                                }
+                            }
+                        }
                         break;
                     case STRING:
                         System.out.println("  String: Field: " + fieldEntry.getKey() + " -> " + cellData.getStringValue());

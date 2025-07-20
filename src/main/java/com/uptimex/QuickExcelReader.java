@@ -115,7 +115,13 @@ public class QuickExcelReader {
         for (FieldDefinition fieldDefinition : fieldDefinitions) {
 
             if (FieldDefinition.DataType.TABLE.getValue().equalsIgnoreCase(fieldDefinition.getType())) {
-                // complex type table ignore here
+                // complex type i.e. table
+                List<Map<String,ExcelCellData>> tableData = readTableField(sheet,fieldDefinition);
+                ExcelCellData excelData = new ExcelCellData();
+                excelData.setFieldDefinition(fieldDefinition);
+                excelData.setValue(tableData);
+                sheetDataMap.put(fieldDefinition.getName(), excelData);
+
                 continue;
             }
 
@@ -136,6 +142,64 @@ public class QuickExcelReader {
         }
 
         return sheetDataMap;
+    }
+
+    private List<Map<String, ExcelCellData>> readTableField(Sheet sheet, FieldDefinition tableDefinition) {
+        List<FieldDefinition> tableDefs =  tableDefinition.getFields();
+        if (tableDefs == null || tableDefs.isEmpty()) {
+            LOG.warn("No fields defined for table type field: {}", tableDefinition.getName());
+            throw new IllegalArgumentException("No fields defined for table type field: " + tableDefinition.getName());
+        }
+        String xlsColumn = tableDefinition.getXlsColumn(); // starting data column for table
+        if(xlsColumn == null || xlsColumn.isEmpty()) {
+         throw new IllegalArgumentException("XLS column for table field " + tableDefinition.getName() + " cannot be null or empty");
+        }
+        String startingCell = "";
+        String endingCell = "";
+        if(xlsColumn.indexOf("-")>0) {
+            // if xlsColumn is a range, we need to split it
+            String[] parts = xlsColumn.split("-");
+            if(parts.length != 2) {
+                throw new IllegalArgumentException("Invalid XLS column range for table field " + tableDefinition.getName() + ": " + xlsColumn);
+            }
+            startingCell = parts[0]; // use the first part as the starting column
+            endingCell = parts[1]; // use the 2nd part as the ending column
+        }
+        ExcelCellHolder tableHolderStart = new ExcelCellHolder(startingCell);
+        ExcelCellHolder tableHolderEnd = new ExcelCellHolder(endingCell);
+        if (tableHolderStart.getRowIndex() < 0 || tableHolderStart.getColumnIndex() < 0) {
+            throw new IllegalArgumentException("Invalid starting cell for table field " + tableDefinition.getName() + ": " + xlsColumn);
+        }else if(tableHolderStart.getRowIndex() > tableHolderEnd.getRowIndex()){
+            throw new IllegalArgumentException("Invalid starting cell for table field " + tableDefinition.getName() + ": " + xlsColumn);
+        }
+
+        List<Map<String, ExcelCellData>> tableDataList = new java.util.ArrayList<>();
+
+        while (tableHolderStart.getRowIndex() <= tableHolderEnd.getRowIndex()) {
+            Map<String, ExcelCellData> tableData = new HashMap<>();
+            for (int i = 0; i < tableDefs.size(); i++) {
+                FieldDefinition colFieldDef = tableDefs.get(i);
+                Object cellValue = readDataFromCell(sheet, colFieldDef, tableHolderStart);
+                ExcelCellData excelData = new ExcelCellData();
+                excelData.setFieldDefinition(colFieldDef);
+                excelData.setValue(cellValue);
+                tableData.put(colFieldDef.getName(), excelData);
+                tableHolderStart.nextCell();
+//                if (colFieldDef.getXlsColumn() == null || colFieldDef.getXlsColumn().isEmpty()) {
+//                    LOG.warn("Field name is null or empty in table field: {}, calculating field {} to next cell in same ROW {} ", tableDefinition.getName(), colFieldDef.getName(), tableHolderStart.getRowIndex());
+//                    tableHolderStart.nextCell();
+//                } else {
+//                    LOG.info("Moved to Field {} is at column: {}", colFieldDef.getName(), colFieldDef.getXlsColumn());
+//                    tableHolderStart.resetToNewPosition(colFieldDef.getXlsColumn());
+//                }
+            }
+
+            tableDataList.add(tableData);
+            tableHolderStart.setColumnIndex(tableHolderEnd.getColumnIndex());
+            tableHolderStart.nextRow(); // Move to the next row for the next iteration
+        }
+
+        return tableDataList;
     }
 
     private Object readDataFromCell(Sheet sheet, FieldDefinition fieldDefinition, ExcelCellHolder holder) {

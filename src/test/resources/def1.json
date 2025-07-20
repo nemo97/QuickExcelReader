@@ -43,14 +43,23 @@
           "fields": [
             {
               "name": "field4a",
-              "type": "boolean",
+              "type": "long",
               "validation": {
                 "required": true
               },
-              "description": "This is a boolean field."
+              "description": "This is a long field."
             },
             {
               "name": "field4b",
+              "type": "string",
+              "validation": {
+                "required": true,
+                "maxLength": 100
+              },
+              "description": "This is a string field."
+            },
+            {
+              "name": "field4c",
               "type": "string",
               "validation": {
                 "required": true,

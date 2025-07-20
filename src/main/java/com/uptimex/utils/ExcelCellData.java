@@ -3,6 +3,7 @@ package com.uptimex.utils;
 import com.uptimex.config.FieldDefinition;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 public class ExcelCellData {
@@ -12,10 +13,10 @@ public class ExcelCellData {
     public FieldDefinition.DataType getCellType() {
         return FieldDefinition.DataType.valueOf(fieldDefinition.getType().toUpperCase());
     }
-    public Map<String,?> getTableValue() {
+    public List<Map<String,ExcelCellData>> getTableValue() {
         switch (getCellType()){
             case TABLE:
-                return (Map<String, ?>) value; // Assuming value is a Map for TABLE type
+                return (List<Map<String, ExcelCellData>>) value; // Assuming value is a Map for TABLE type
             default:
                 throw new UnsupportedOperationException("This cell is not of type TABLE, cannot be converted to Map directly.");
 
