@@ -20,7 +20,7 @@
     </properties>
     <scm>
         <connection>scm:git:git://github.com/nemo97/QuickExcelReader.git</connection>
-        <developerConnection>scm:git:ssh://github.com:nemo97/QuickExcelReader.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/nemo97/QuickExcelReader.git</developerConnection>
         <url>http://github.com/nemo97/QuickExcelReader/tree/main</url>
     </scm>
     <dependencies>
