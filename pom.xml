@@ -32,7 +32,7 @@
                 <configuration>
                     <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
-                    <waitUntil>published</waitUntil>
+<!--                    <waitUntil>published</waitUntil>-->
                 </configuration>
             </plugin>
             <plugin>
@@ -50,7 +50,7 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <keyname>gpg.passphrase</keyname>
+                            <keyname>8EA4BFA810DB9411</keyname>
                             <passphraseServerId>gpg.passphrase</passphraseServerId>
                         </configuration>
                     </execution>
