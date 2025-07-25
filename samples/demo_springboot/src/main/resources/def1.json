@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "sheets": [
+    {
+      "sheetName": "def1",
+      "description": "This is a sample definition file for def1.",
+      "fields": [
+        {
+          "name": "field1",
+          "xlsColumn": "A3",
+          "type": "string",
+          "validation": {
+            "required": true,
+            "maxLength": 50,
+            "regex": "^[a-zA-Z0-9_]+$"
+          },
+          "description": "This is a string field."
+        },
+        {
+          "name": "field2",
+          "type": "long",
+          "validation": {
+            "required": true,
+            "range": {
+              "min": 1,
+              "max": 100
+            }
+          },
+          "description": "This is an integer field."
+        },
+        {
+          "name": "field3",
+          "type": "boolean",
+          "validation": {
+            "required": true
+          },
+          "description": "This is a boolean field."
+        },
+        {
+          "name": "field4",
+          "type": "table",
+          "xlsColumn": "B8-B9",
+          "fields": [
+            {
+              "name": "field4a",
+              "type": "long",
+              "validation": {
+                "required": true
+              },
+              "description": "This is a long field."
+            },
+            {
+              "name": "field4b",
+              "type": "string",
+              "validation": {
+                "required": true,
+                "maxLength": 100
+              },
+              "description": "This is a string field."
+            },
+            {
+              "name": "field4c",
+              "type": "string",
+              "validation": {
+                "required": true,
+                "maxLength": 100
+              },
+              "description": "This is a string field."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
