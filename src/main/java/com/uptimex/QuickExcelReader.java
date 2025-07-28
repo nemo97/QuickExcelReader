@@ -1,10 +1,12 @@
 package com.uptimex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.ValidationMessage;
 import com.uptimex.config.ExcelDefinition;
 import com.uptimex.config.FieldDefinition;
 import com.uptimex.utils.ExcelCellData;
 import com.uptimex.utils.ExcelCellHolder;
+import com.uptimex.utils.JsonSchemaValidator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -12,12 +14,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 import static java.lang.Character.getType;
 
@@ -26,38 +28,46 @@ public class QuickExcelReader {
     private final boolean validateData;
     private final boolean validateSchema;
 
-    private FileInputStream excelInputStream;
-    private FileInputStream configInputStream;
-//    private String sheetName;
+//    private FileInputStream excelInputStream;
+//    private FileInputStream configInputStream;
+
+    private Path jsonPath;
+    private Path excelPath;
 
     private QuickExcelReader(Builder builder) {
-        this.excelInputStream = builder.excelInputStream;
-        this.configInputStream = builder.configInputStream;
+//        this.excelInputStream = builder.excelInputStream;
+//        this.configInputStream = builder.configInputStream;
+        this.jsonPath = builder.jsonPath;
+        this.excelPath = builder.excelPath;
         this.validateSchema = builder.validateSchema;
         this.validateData = builder.validateData;
 //        this.sheetName = builder.sheetName;
     }
 
-    public Map<String, Map<String, ExcelCellData>> read() throws IOException {
+    public  ResultExcelData read() throws IOException {
+
+
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
         Map<String, Map<String, ExcelCellData>> excelDataMap = new java.util.HashMap<>();
 
-//        LOG.debug("Validating JSON config against schema...");
-//        JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
-//
-//        Set<ValidationMessage>  validationMessages = jsonSchemaValidator.isValid(configInputStream);
-//        LOG.info("Validation completed. Found {} errors.", validationMessages.size());
-//
-//        if(!validationMessages.isEmpty()){
-//            StringBuilder errorMessage = new StringBuilder("Validation errors found in JSON config:\n");
-//            for (ValidationMessage message : validationMessages) {
-//                errorMessage.append(message.getMessage()).append("\n");
-//            }
-//            throw new IllegalArgumentException(errorMessage.toString());
-//        }
+        try (BufferedInputStream fis = new BufferedInputStream(Files.newInputStream(jsonPath))) {
+            LOG.debug("Validating JSON config against schema...");
+            JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
 
+            Set<ValidationMessage> validationMessages = jsonSchemaValidator.isValid(fis);
+            LOG.info("Validation completed. Found {} errors.", validationMessages.size());
+
+            if (!validationMessages.isEmpty()) {
+                StringBuilder errorMessage = new StringBuilder("Validation errors found in JSON config:\n");
+                for (ValidationMessage message : validationMessages) {
+                    errorMessage.append(message.getMessage()).append("\n");
+                }
+                throw new IllegalArgumentException(errorMessage.toString());
+            }
+        }
         LOG.debug("JSON config is valid. Proceeding to read Excel file...");
+        BufferedInputStream configInputStream = new BufferedInputStream(Files.newInputStream(jsonPath));
         ExcelDefinition excelDefinition = objectMapper.readValue(configInputStream, ExcelDefinition.class);
         LOG.info("Excel definition loaded: schemaVersion={}, sheets={}",
                 excelDefinition.getSchemaVersion(), excelDefinition.getSheets().size());
@@ -66,7 +76,7 @@ public class QuickExcelReader {
 
 
         // Here you can process the excelDefinition object as needed
-        try (FileInputStream fis = excelInputStream) {
+        try (BufferedInputStream fis = new BufferedInputStream(Files.newInputStream(excelPath))) {
 
             Workbook workbook = new XSSFWorkbook(fis);
 
@@ -105,10 +115,11 @@ public class QuickExcelReader {
         }
 
         LOG.info("Excel data reading completed.");
-        return excelDataMap;
+        ResultExcelData result = new ResultExcelData(excelDataMap);
+        return result;
     }
 
-    private Map<String, ExcelCellData> readFields(List<FieldDefinition> fieldDefinitions, ExcelCellHolder holder, Sheet sheet) {
+    private  Map<String, ExcelCellData> readFields(List<FieldDefinition> fieldDefinitions, ExcelCellHolder holder, Sheet sheet) {
 
         Map<String, ExcelCellData> sheetDataMap = new HashMap<>();
 
@@ -251,40 +262,42 @@ public class QuickExcelReader {
 
     public static class Builder {
 
-        private FileInputStream excelInputStream;
-        private FileInputStream configInputStream;
+//        private FileInputStream excelInputStream;
+//        private FileInputStream configInputStream;
         private boolean validateSchema = true;
         private boolean validateData;
+        private Path jsonPath;
+        private Path excelPath;
 
-        public Builder excelPath(String excelPath) {
-//            this.excelPath = excelPath;
-            try {
-                this.excelInputStream = new FileInputStream(excelPath);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to open Excel file: " + excelPath, e);
-            }
+        public Builder excelPath(Path excelPath) {
+            this.excelPath = excelPath;
+//            try {
+//                this.excelInputStream = new FileInputStream(excelPath);
+//            } catch (IOException e) {
+//                throw new RuntimeException("Failed to open Excel file: " + excelPath, e);
+//            }
             return this;
         }
 
-        public Builder jsonPath(String jsonPath) {
-//            this.jsonPath = jsonPath;
-            try {
-                this.configInputStream = new FileInputStream(jsonPath);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to open JSON config file: " + jsonPath, e);
-            }
+        public Builder jsonPath(Path jsonPath) {
+            this.jsonPath = jsonPath;
+//            try {
+//                this.configInputStream = new FileInputStream(jsonPath);
+//            } catch (IOException e) {
+//                throw new RuntimeException("Failed to open JSON config file: " + jsonPath, e);
+//            }
             return this;
         }
 
-        public Builder excelInputStream(FileInputStream excelInputStream) {
-            this.excelInputStream = excelInputStream;
-            return this;
-        }
-
-        public Builder configInputStream(FileInputStream configInputStream) {
-            this.configInputStream = configInputStream;
-            return this;
-        }
+//        public Builder excelInputStream(FileInputStream excelInputStream) {
+//            this.excelInputStream = excelInputStream;
+//            return this;
+//        }
+//
+//        public Builder configInputStream(FileInputStream configInputStream) {
+//            this.configInputStream = configInputStream;
+//            return this;
+//        }
 
         public Builder validateSchema(boolean validateSchema) {
             this.validateSchema = validateSchema;
@@ -298,12 +311,19 @@ public class QuickExcelReader {
 
 
         public QuickExcelReader build() {
-            if (excelInputStream == null) {
+//            if (excelInputStream == null) {
+//                throw new IllegalArgumentException("Excel input stream must not be null");
+//            }
+//            if (configInputStream == null) {
+//                throw new IllegalArgumentException("Config input stream must not be null");
+//            }
+            if (this.jsonPath == null) {
                 throw new IllegalArgumentException("Excel input stream must not be null");
             }
-            if (configInputStream == null) {
+            if (this.excelPath == null) {
                 throw new IllegalArgumentException("Config input stream must not be null");
             }
+
             return new QuickExcelReader(this);
         }
     }

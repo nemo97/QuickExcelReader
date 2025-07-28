@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Upload Excel File</title>
+</head>
+<body>
+    <h2>Upload Excel File</h2>
+
+    <div th:if="${error}" style="color: red;">
+        <p th:text="${error}"></p>
+    </div>
+    <div th:if="${message}" style="color: green;">
+        <p th:text="${message}"></p>
+    </div>
+    <form method="POST" action="#" th:action="@{/upload}"  enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xls,.xlsx" required />
+        <button type="submit">Upload</button>
+    </form>
+    <h3>Uploaded Data</h3>
+    <div th:if="${data}" style="color: green;">
+        <div th:text="${data}"></div>
+    </div>
+</body>
+</html>

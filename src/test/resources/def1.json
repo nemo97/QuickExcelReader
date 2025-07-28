@@ -29,6 +29,18 @@
           "description": "This is an integer field."
         },
         {
+          "name": "field21",
+          "type": "double",
+          "validation": {
+            "required": true,
+            "range": {
+              "min": 1,
+              "max": 100
+            }
+          },
+          "description": "This is an decimal field."
+        },
+        {
           "name": "field3",
           "type": "boolean",
           "validation": {

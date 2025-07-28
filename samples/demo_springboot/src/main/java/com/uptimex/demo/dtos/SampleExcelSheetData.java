@@ -7,8 +7,10 @@ public class SampleExcelSheetData {
     private String field1;
     private Long field2;
     private boolean field3;
+    private Double field21;
 
     private List<SampleExcelSheetTableData> field4 = new ArrayList<>();
+    private String name;
 
     public String getField1() {
         return field1;
@@ -40,5 +42,22 @@ public class SampleExcelSheetData {
 
     public void setField4(List<SampleExcelSheetTableData> field4) {
         this.field4 = field4;
+    }
+
+    public void setName(String name) {
+
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Double getField21() {
+        return field21;
+    }
+
+    public void setField21(Double field21) {
+        this.field21 = field21;
     }
 }

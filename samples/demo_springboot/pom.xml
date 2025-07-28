@@ -35,6 +35,11 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>1.11.0</version>
+		</dependency>
+		<dependency>
 			<groupId>io.github.nemo97</groupId>
 			<artifactId>QuickExcelReader</artifactId>
 			<version>0.4-beta-SNAPSHOT</version>
@@ -55,6 +60,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+<!--			<version>2.5.6</version>-->
 		</dependency>
 	</dependencies>
 

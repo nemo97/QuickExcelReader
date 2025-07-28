@@ -25,9 +25,9 @@ public class HelloController {
         return "Hello, World!";
     }
 
-
     private final String UPLOAD_DIR = System.getProperty("user.dir")+"/uploads/";
 
+    /*
     @PostMapping("/upload")
     @ResponseBody
     public String handleFileUpload(@RequestParam("file") MultipartFile file) {
@@ -124,5 +124,5 @@ public class HelloController {
         }
 
 //        return "File uploaded successfully: " + file.getOriginalFilename();
-    }
+    }*/
 }

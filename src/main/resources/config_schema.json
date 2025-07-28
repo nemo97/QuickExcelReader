@@ -30,7 +30,7 @@
       "properties": {
         "name": { "type": "string" },
         "xlsColumn": { "type": "string" },
-        "type": { "type": "string", "enum": ["string", "integer", "boolean", "table"] },
+        "type": { "type": "string", "enum": ["string","double", "long", "boolean", "table"] },
         "validation": {
           "type": "object",
           "properties": {

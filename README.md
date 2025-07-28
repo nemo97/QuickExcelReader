@@ -27,78 +27,63 @@ by building from source code.
    ```
 #### Usage
 
+Add the following to your `pom.xml` file to use the Quick Excel Reader library in your Java project.
+```xml
+
+<dependency>
+    <groupId>com.github.nemo97</groupId>
+    <artifactId>quick-excel-reader</artifactId>
+    <version>0.4.beta</version>
+</dependency>
+
+```
+
+You need to add the following dependencies to your `pom.xml` file for JSON and Excel parsing, if already not present.
+```xml
+
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.15.2</version>
+</dependency>   
+<dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi-ooxml</artifactId>
+    <version>5.2.3</version>
+</dependency>
+
+```
+
 You can use the `QuickExcelReaderTest` test class as a reference. 
 ```java
 
-        InputStream excelStream = getClass().getResourceAsStream("/files/simple_excle.xlsx");
-        Path excelFile = Files.createTempFile("test", ".xlsx");
+// Copy Excel and JSON files from classpath to temp files
+InputStream excelStream = getClass().getResourceAsStream("/files/simple_excle.xlsx");
+Path excelFile = Files.createTempFile("test", ".xlsx");
         Files.copy(excelStream, excelFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-        InputStream jsonStream = getClass().getResourceAsStream("/def1.json");
-        Path jsonFile = Files.createTempFile("test", ".json");
+InputStream jsonStream = getClass().getResourceAsStream("/def1.json");
+Path jsonFile = Files.createTempFile("test", ".json");
         Files.copy(jsonStream, jsonFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
 
-        QuickExcelReader reader = QuickExcelReader.builder()
-                .excelPath(excelFile.toFile().getAbsolutePath())
-                .jsonPath(jsonFile.toFile().getAbsolutePath())
-                .build();
+QuickExcelReader reader = QuickExcelReader.builder()
+        .excelPath(excelFile)
+        .jsonPath(jsonFile)
+        .build();
 
-        Map<String,Map<String, ExcelCellData>> result = reader.read();
+ResultExcelData result = reader.read();
 
-        //System.out.println("Result: " + result);
-
-        for (Map.Entry<String, Map<String, ExcelCellData>> sheetEntry : result.entrySet()) {
-            System.out.println("Sheet: " + sheetEntry.getKey());
-
-            for (Map.Entry<String, ExcelCellData> fieldEntry : sheetEntry.getValue().entrySet()) {
-                //System.out.println("  Field: " + fieldEntry.getKey() + " -> " + fieldEntry.getValue().getValue());
-                ExcelCellData cellData = fieldEntry.getValue();
-                switch (cellData.getCellType()){
-                    case TABLE:
-                        System.out.println("  table: Field: " + fieldEntry.getKey());
-                        List<Map<String,ExcelCellData>> tableData = cellData.getTableValue();
-                        for (Map<String, ExcelCellData> row : tableData) {
-                            System.out.println("    Row: ");
-                            for (Map.Entry<String, ExcelCellData> rowEntry : row.entrySet()) {
-                                //System.out.println("      " + rowEntry.getKey() + " -> " + rowEntry.getValue().getStringValue());
-                                ExcelCellData cellData2 = rowEntry.getValue();
-                                switch (cellData2.getCellType()) {
-                                    case STRING:
-                                        System.out.println("  String: Field: " + rowEntry.getKey() + " -> " + cellData2.getStringValue());
-                                        break;
-                                    case LONG:
-                                        System.out.println("  Long: Field: " + rowEntry.getKey() + " -> " + cellData2.getLongValue());
-                                        break;
-                                    case BOOLEAN:
-                                        System.out.println("  Boolean : Field: " + rowEntry.getKey() + " -> " + cellData2.getValue());
-                                        break;
-                                    case LOCAL_DATE_TIME:
-                                        System.out.println("  LocalDateTime : Field: " + rowEntry.getKey() + " -> " + cellData2.getValue());
-                                        break;
-                                    default:
-                                        System.out.println("  Field: " + rowEntry.getKey() + " -> Unknown type");
-                                }
-                            }
-                        }
-                        break;
-                    case STRING:
-                        System.out.println("  String: Field: " + fieldEntry.getKey() + " -> " + cellData.getStringValue());
-                        break;
-                    case LONG:
-                        System.out.println("  Long: Field: " + fieldEntry.getKey() + " -> " + cellData.getLongValue());
-                        break;
-                    case BOOLEAN:
-                        System.out.println("  Boolean : Field: " + fieldEntry.getKey() + " -> " + cellData.getValue());
-                        break;
-                    case LOCAL_DATE_TIME:
-                        System.out.println("  LocalDateTime : Field: " + fieldEntry.getKey() + " -> " + cellData.getValue());
-                        break;
-                    default:
-                        System.out.println("  Field: " + fieldEntry.getKey() + " -> Unknown type");
-                }
-            }
-        }
+// print the result as map
+System.out.println("Result: " + result.getDataMap());
 
 ```
+There is also spring boot sample application in the `sample` folder. 
+You can run it as a spring boot application.
+```bash
+cd sample
+.\mvnw spring-boot:run
+```
+There is a simple UI(http://localhost:8080) to upload excel file in `sample/demo_springboot/` folder and json defination file `sample/demo_springboot/src/main/resources` and see the result.
+
 
