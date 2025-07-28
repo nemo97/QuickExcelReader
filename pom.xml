@@ -30,7 +30,7 @@
                 <version>2.4.2</version>
                 <configuration>
 <!--                    <tagNameFormat>v@{project.version}</tagNameFormat>-->
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
+<!--                    <autoVersionSubmodules>true</autoVersionSubmodules>-->
                     <releaseProfiles>releases</releaseProfiles>
                 </configuration>
             </plugin>
