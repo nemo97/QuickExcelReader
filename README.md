@@ -1,5 +1,5 @@
 
-### WIP - Excel Parser Utility (Quick Excel Reader)
+### Excel Parser Utility (Quick Excel Reader)
 **It's 2025! Still The World run on Excel.** Everywhere I go, I write something like this
 utility to help me parse excel file quickly. So decided to make it public and for myself for future use.
 
