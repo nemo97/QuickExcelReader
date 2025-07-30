@@ -76,10 +76,21 @@ ResultExcelData result = reader.read();
 
 // print the result as map
 System.out.println("Result: " + result.getDataMap());
-
+// print the result as list
+        {
+def1=
+        {
+field1=Test1,
+field21=5.5,
+field3=true,
+field2=3,
+field4=[{field4b=test_col2, field4c=test_col3, field4a=1}, {field4b=test_col21, field4c=test_col31, field4a=2}]
+        }
+        }
 ```
 There is also spring boot sample application in the `sample` folder. 
 You can run it as a spring boot application.
+
 ```bash
 cd sample
 .\mvnw spring-boot:run
